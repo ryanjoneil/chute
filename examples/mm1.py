@@ -1,15 +1,15 @@
 # A simple M/M/1 Queue example
 
 import chute
+#import random
 
-@chute.resource
-class Server(object):
-    pass
+#@chute.process(lambda: random.expovariate(1))
+@chute.process
+def customer():
+    yield chute.request, 'server 1'
+    yield chute.hold, chute.dist.exponential(0.25)
+    yield chute.release, 'server 1'
 
-server = Server()
-
-@chute.process(chute.dist.exponential(l=0.5)
-def customer()
-    yield chute.request, server
-    yield chute.hold, chute.dist.exponential(l=0.25)
-    yield chute.release, server
+if __name__ == '__main__':
+    s = chute.Simulator()
+    s.run(10)
