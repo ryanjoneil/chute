@@ -57,7 +57,7 @@ class Simulator(object):
                 break
 
             # TODO: registration of event receivers and formatting
-            print next_event, next_event.time
+            print next_event.process, next_event.time
 
             # Current time = the time of our current event.
             self.clock = next_event.time
