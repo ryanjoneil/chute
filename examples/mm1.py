@@ -1,10 +1,8 @@
 # A simple M/M/1 Queue example
 
 import chute
-#import random
 
-#@chute.process(lambda: random.expovariate(1))
-@chute.process
+@chute.process(chute.dist.exponential(1))
 def customer():
     yield chute.request, 'server 1'
     yield chute.hold, chute.dist.exponential(0.25)

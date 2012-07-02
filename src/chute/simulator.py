@@ -1,11 +1,12 @@
 from chute import event
+from functools import wraps
 import heapq
 
 PROCESSES = {}
 
 # TODO: This needs to use the decorator util library, but I can't remember
 #       exactly how that works without the documentation at hand...
-def process(p, interarrival=1):
+def process(interarrival):
     '''
     Registers a process with the simulator. A process can be anything that is
     callable and is a generator, including classes that implement __call__.
@@ -19,11 +20,19 @@ def process(p, interarrival=1):
     between creating new instances of the process or a function that returns
     the next interarrival time.
     '''
-    # If interarrival is not callable, turn it into a function that is.
-    if callable(interarrival):
-        PROCESSES[p] = interarrival
-    else:
-        PROCESSES[p] = lambda: interarrival
+    def decorator(p):
+        # If interarrival is not callable, turn it into a function that is.
+        if callable(interarrival):
+            PROCESSES[p] = interarrival
+        else:
+            PROCESSES[p] = lambda: interarrival
+
+        @wraps
+        def wrapper(*args, **kwds):
+            return p(*args, **kwds)
+        return wrapper
+
+    return decorator
 
 class Simulator(object):
     def run(self, time):
