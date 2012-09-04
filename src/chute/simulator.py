@@ -10,7 +10,7 @@ def process(interarrival):
     '''
     Registers a process with the simulator. A process can be anything that is
     callable and is a generator, including classes that implement __call__.
-    When a process is instantiated, the simulator will call it and expect it 
+    When a process is instantiated, the simulator will call it and expect it
     to start yielding simulation events.
 
     Note: if the process is just a generator, it should be able to be invoked
@@ -47,7 +47,9 @@ class Simulator(object):
         self.heap = []
         for process, interarrival in self.processes.items():
             when = interarrival()
-            heapq.heappush(self.heap, event.CreateEvent(when, process))
+            heapq.heappush(self.heap,
+                event.CreateEvent(when, interarrival, process)
+            )
 
         # Run the DES algorithm until we are either out of events entirely or
         # the allotted time has passed (we get an event > time).
@@ -57,16 +59,12 @@ class Simulator(object):
                 break
 
             # TODO: registration of event receivers and formatting
-            print next_event.process, next_event.time
+            print next_event.process, next_event.type, next_event.time
 
             # Current time = the time of our current event.
             self.clock = next_event.time
 
-            # If this is a create event, then register another create after
-            # the appropriate interrival time.
-            # TODO: make this more elegant -- a next() on Event or something?
-            # TODO: when processes become objects, do we index them diff.?
-            if isinstance(next_event, event.CreateEvent):
-                when = self.clock + self.processes[next_event.process]()
-                next_create = event.CreateEvent(when, next_event.process)
-                heapq.heappush(self.heap, next_create)
+            # See if this event triggers another event.
+            followup_event = next_event.next()
+            if followup_event is not None:
+                heapq.heappush(self.heap, followup_event)
