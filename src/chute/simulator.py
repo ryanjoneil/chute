@@ -62,8 +62,14 @@ class Simulator(object):
             if next_event.time > time:
                 break
 
+            # TODO: see if the event can be honored. if it can't, keep around,
+            #       move on to the next event. put all non-honored evnts back
+            #       in the heap at the end.
+            if next_event:
+                pass
+
             # TODO: registration of event receivers and formatting
-            print next_event.process, next_event.type, next_event.time
+            print next_event.process, next_event.type, next_event.time, bool(next_event)
 
             # Current time = the time of our current event.
             self.clock = next_event.time

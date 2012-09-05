@@ -9,8 +9,8 @@ import chute
 def customer():
     print 'here'
     yield chute.request, 'server 1'
-    yield chute.hold, chute.dist.exponential(0.25)
-    yield chute.release, 'server 1'
+    #yield chute.hold(chute.dist.exponential(0.25))
+    #yield chute.release('server 1')
 
 # Here is an equivalent process, from the perspective of chute:
 #@chute.process(chute.dist.exponential(1))
