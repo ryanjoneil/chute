@@ -35,6 +35,10 @@ def process(interarrival):
     return decorator
 
 class Simulator(object):
+    def __init__(self):
+        # These map processes to their event generators.
+        self.generators = {}
+
     def run(self, time):
         '''Run the simulation until a particular time.'''
         self.clock = 0
@@ -64,7 +68,9 @@ class Simulator(object):
             # Current time = the time of our current event.
             self.clock = next_event.time
 
-            # See if this event triggers another event.
-            followup_event = next_event.next()
-            if followup_event is not None:
+            # See if this event triggers another event. For instance, a
+            # CreateEvent should always wait some interarrival time and then
+            # be followed by another CreateEvent.
+
+            for followup_event in next_event.next():
                 heapq.heappush(self.heap, followup_event)

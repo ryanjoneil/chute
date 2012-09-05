@@ -4,8 +4,10 @@ import chute
 
 # A process is anything that is callable. And a resource can be anything
 # that is hashable by Python, so really anything at all:
-@chute.process(chute.dist.exponential(1))
+#@chute.process(chute.dist.exponential(1))
+@chute.process(lambda: 1)
 def customer():
+    print 'here'
     yield chute.request, 'server 1'
     yield chute.hold, chute.dist.exponential(0.25)
     yield chute.release, 'server 1'

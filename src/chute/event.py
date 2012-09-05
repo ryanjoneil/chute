@@ -1,9 +1,12 @@
+import heapq
+
 class Event(object):
     '''Represents an event in the Discrete Event Simulation.'''
     def __init__(self, time):
         self.time = time
         self.type = 'event'
         self.process = None
+        self.events = []
 
     def __cmp__(self, other):
         return cmp(self.time, other.time)
@@ -14,8 +17,9 @@ class Event(object):
         instance, a CreateEvent will always have another CreateEvent after
         a certain interarrival time.
         '''
-        return None
-
+        while self.events:
+            yield heapq.heappop(self.events)
+        # TODO: run the process and add appropriate events
 
 class CreateEvent(Event):
     '''Events for creating new processes.'''
@@ -27,5 +31,12 @@ class CreateEvent(Event):
 
     def next(self):
         # Register another create after the appropriate interrival time.
-        when = self.time + self.interarrival()
-        return CreateEvent(when, self.interarrival, self.process)
+        next_create = CreateEvent(
+            self.time + self.interarrival(),
+            self.interarrival,
+            self.process
+        )
+        heapq.heappush(self.events, next_create)
+
+        for x in super(CreateEvent, self).next():
+            yield x
