@@ -45,12 +45,14 @@ class Simulator(object):
             event_gen = event.CreateEventGenerator(process, interarrival)
             heapq.heappush(heap, event_gen)
 
-        print heap
-
         while True:
             event_gen = heapq.heappop(heap)
-            next_event = event_gen.send(clock)
-            
+            try:
+                next_event = event_gen.send(clock)
+            except StopIteration:
+                # This event generator is done. Abandon it.
+                continue
+
             if next_event.clock >= time:
                 # Stop the simulation when we reach our end time.
                 break
@@ -58,44 +60,11 @@ class Simulator(object):
             if next_event.clock > clock:
                 clock = next_event.clock
 
+                # See if this event spawns a new event generator.
+                next_gen = next_event.spawn()
+                if next_gen is not None:
+                    heapq.heappush(heap, next_gen)
+
             heapq.heappush(heap, event_gen)
 
             print next_event
-
-        # Make a copy of registered processes just in case it changes.
-        #processes = PROCESSES.copy()
-
-        # Initiate a new event priority queue and add an event for the first
-        # instantiation of each process type to it.
-        #self.heap = []
-        #for process, interarrival in self.processes.items():
-        #    when = interarrival()
-        #    heapq.heappush(self.heap,
-        #        event.CreateEvent(when, interarrival, process)
-        #    )
-
-        ## Run the DES algorithm until we are either out of events entirely or
-        ## the allotted time has passed (we get an event > time).
-        #while self.heap:
-        #    next_event = heapq.heappop(self.heap)
-        #    if next_event.time > time:
-        #        break
-        #
-        #    # TODO: see if the event can be honored. if it can't, keep around,
-        #    #       move on to the next event. put all non-honored evnts back
-        #    #       in the heap at the end.
-        #    if next_event:
-        #        pass
-        #
-        #    # TODO: registration of event receivers and formatting
-        #    print next_event.process, next_event.type, next_event.time, bool(next_event)
-        #
-        #    # Current time = the time of our current event.
-        #    self.clock = next_event.time
-        #
-        #    # See if this event triggers another event. For instance, a
-        #    # CreateEvent should always wait some interarrival time and then
-        #    # be followed by another CreateEvent.
-        #
-        #    for followup_event in next_event.next():
-        #        heapq.heappush(self.heap, followup_event)
