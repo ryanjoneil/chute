@@ -45,11 +45,15 @@ class Simulator(object):
             event_gen = event.CreateEventGenerator(process, interarrival)
             heapq.heappush(heap, event_gen)
 
-        while True:
+        while heap:
+            print '\n', clock, heap
             event_gen = heapq.heappop(heap)
             try:
+                print 'CLOCK = ', clock
                 next_event = event_gen.send(clock)
+                print 'END CLOCK'
             except StopIteration:
+                print 'STOP'
                 # This event generator is done. Abandon it.
                 continue
 
