@@ -41,9 +41,8 @@ class EventGenerator(object):
         next_event = self._generate()
         while True:
             next_clock = yield next_event
-            print 'NEXT CLOCK?', next_clock
             if next_clock is not None and next_clock >= self.clock:
-                print 'THING ['
+                print self, 'NEXT CLOCK =', next_clock, '['
                 print '    CURR EVENT:', next_event
                 print '    NEXT CLOCK:', next_clock
                 print '    SELF CLOCK:', self.clock
@@ -79,7 +78,7 @@ class CreateEventGenerator(EventGenerator):
         return e
 
     def __repr__(self):
-        return 'CREATE: ' + str(self.next().clock)
+        return 'CREATE'
 
 class ProcessEventGenerator(EventGenerator):
     def __init__(self, create_event):
@@ -90,7 +89,11 @@ class ProcessEventGenerator(EventGenerator):
             - `create_event`: `Event` that instantiated the actor
         '''
         self.create_event = create_event
-        self._process = iter(create_event.process())
+        print type(create_event.process)
+        if isinstance(create_event.process, type):
+            self._process = iter(create_event.process()())
+        else:
+            self._process = iter(create_event.process())
         super(ProcessEventGenerator, self).__init__(create_event.clock)
 
     def _generate(self):
@@ -105,4 +108,4 @@ class ProcessEventGenerator(EventGenerator):
         return e
 
     def __repr__(self):
-        return 'PROCESS ' + str(self.create_event.process_instance) + ': ' + str(self.next().clock)
+        return 'PROCESS ' + str(self.create_event.process_instance)

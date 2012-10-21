@@ -49,26 +49,27 @@ class Simulator(object):
             print '\n', clock, heap
             event_gen = heapq.heappop(heap)
             try:
-                print 'CLOCK = ', clock
+                print 'SIM CLOCK = ', clock, event_gen
                 next_event = event_gen.send(clock)
-                print 'END CLOCK'
             except StopIteration:
-                print 'STOP'
+                print 'SIM STOP PROCESS', event_gen
                 # This event generator is done. Abandon it.
                 continue
 
-            if next_event.clock >= time:
+            clock = next_event.clock
+
+            # See if this event spawns a new event generator.
+            next_gen = next_event.spawn()
+            if next_gen is not None:
+                print 'SIM ADD PROCESS', next_gen
+                heapq.heappush(heap, next_gen)
+
+            print 'SIM RE-ADD PROCESS', event_gen
+            heapq.heappush(heap, event_gen)
+
+            print 'SIM NEXT EVENT', next_event
+
+            if clock >= time:
                 # Stop the simulation when we reach our end time.
                 break
 
-            if next_event.clock > clock:
-                clock = next_event.clock
-
-                # See if this event spawns a new event generator.
-                next_gen = next_event.spawn()
-                if next_gen is not None:
-                    heapq.heappush(heap, next_gen)
-
-            heapq.heappush(heap, event_gen)
-
-            print next_event
