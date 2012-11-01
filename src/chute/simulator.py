@@ -56,6 +56,10 @@ class Simulator(object):
                 # This event generator is done. Abandon it.
                 continue
 
+            if next_event.clock >= time:
+                # Stop the simulation when we reach our end time.
+                break
+
             clock = next_event.clock
 
             # See if this event spawns a new event generator.
@@ -66,10 +70,4 @@ class Simulator(object):
 
             print 'SIM RE-ADD PROCESS', event_gen
             heapq.heappush(heap, event_gen)
-
             print 'SIM NEXT EVENT', next_event
-
-            if clock >= time:
-                # Stop the simulation when we reach our end time.
-                break
-

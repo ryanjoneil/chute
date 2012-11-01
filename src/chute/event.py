@@ -31,6 +31,7 @@ class EventGenerator(object):
     def __init__(self,  clock=0):
         self.clock = clock
         self._iter = iter(self)
+        self._next = None
         self.next()
 
     def __cmp__(self, other):
@@ -38,20 +39,21 @@ class EventGenerator(object):
 
     def __iter__(self):
         # Get the first event
-        next_event = self._generate()
         while True:
-            next_clock = yield next_event
-            if next_clock is not None and next_clock >= self.clock:
+            next_clock = yield self._next
+            if next_clock is not None and not (next_clock < self.clock):
                 print self, 'NEXT CLOCK =', next_clock, '['
-                print '    CURR EVENT:', next_event
-                print '    NEXT CLOCK:', next_clock
-                print '    SELF CLOCK:', self.clock
-                next_event = self._generate()
-                print '    NEXT EVENT:', next_event
+                #print '    CURR EVENT:', next_event
+                #print '    NEXT CLOCK:', next_clock
+                #print '    SELF CLOCK:', self.clock
+                self._next = self._generate()
+                print '    NEXT EVENT:', self._next
                 print ']'
 
     def next(self):
-        return self._iter.next()
+        if self._next is None:
+            self._next = self._iter.next()
+        return self._next
 
     def send(self, *args, **kwds):
         return self._iter.send(*args, **kwds)
@@ -78,7 +80,7 @@ class CreateEventGenerator(EventGenerator):
         return e
 
     def __repr__(self):
-        return 'CREATE'
+        return 'CREATE'# (%s)' % self.next()
 
 class ProcessEventGenerator(EventGenerator):
     def __init__(self, create_event):
@@ -89,7 +91,6 @@ class ProcessEventGenerator(EventGenerator):
             - `create_event`: `Event` that instantiated the actor
         '''
         self.create_event = create_event
-        print type(create_event.process)
         if isinstance(create_event.process, type):
             self._process = iter(create_event.process()())
         else:
@@ -104,8 +105,9 @@ class ProcessEventGenerator(EventGenerator):
             self.create_event.process,
             self.create_event.process_instance
         )
+        print 'XXX %s GENERATED %s' % (self, e)
         self.clock += 1
         return e
 
     def __repr__(self):
-        return 'PROCESS ' + str(self.create_event.process_instance)
+        return 'PROCESS %s' % (self.create_event.process_instance)
