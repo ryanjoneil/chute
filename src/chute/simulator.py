@@ -1,8 +1,10 @@
 from chute import event
 from functools import wraps
 import heapq
+from axi.indexer import Indexer
 
 PROCESSES = {}
+
 
 # TODO: This needs to use the decorator util library, but I can't remember
 #       exactly how that works without the documentation at hand...
@@ -34,6 +36,7 @@ def process(interarrival):
 
     return decorator
 
+
 class Simulator(object):
     def run(self, time):
         '''Run the simulation until a particular time.'''
@@ -46,28 +49,44 @@ class Simulator(object):
             heapq.heappush(heap, event_gen)
 
         while heap:
-            print '\n', clock, heap
-            event_gen = heapq.heappop(heap)
-            try:
-                print 'SIM CLOCK = ', clock, event_gen
-                next_event = event_gen.send(clock)
-            except StopIteration:
-                print 'SIM STOP PROCESS', event_gen
-                # This event generator is done. Abandon it.
-                continue
+            print 'heap =', heap
+            generators = []  # Stack of event generators.
 
-            if next_event.clock >= time:
-                # Stop the simulation when we reach our end time.
+            while True:
+                # Get the next event generator off the heap.
+                try:
+                    event_gen = heapq.heappop(heap)
+                    print 'event_gen', event_gen, 'peek =', event_gen.peek
+                except IndexError:
+                    raise
+                    break  # Nothing to do. Quit the simulation.
+
+                # Save this to use later.
+                generators.append(event_gen)
+
+                # See if it has an event we can process.
+                if event_gen.peek.ok(clock):
+                    next_event = event_gen.next
+                    clock = next_event.clock
+                    print 'next_event', next_event
+
+                    # If the generator is done, take it off our list.
+                    if event_gen.done:
+                        generators.pop()
+
+                    # See if this event spawns a new event generator.
+                    next_gen = next_event.spawn()
+                    if next_gen is not None:
+                        generators.append(next_gen)
+
+                    break
+
+            # Add back all the generators we removed in order to find
+            # an event that could be processed.
+            while generators:
+                heapq.heappush(heap, generators.pop())
+
+            if clock >= time:
+                # Simulation has run to end time.
+                print 'quit'
                 break
-
-            clock = next_event.clock
-
-            # See if this event spawns a new event generator.
-            next_gen = next_event.spawn()
-            if next_gen is not None:
-                print 'SIM ADD PROCESS', next_gen
-                heapq.heappush(heap, next_gen)
-
-            print 'SIM RE-ADD PROCESS', event_gen
-            heapq.heappush(heap, event_gen)
-            print 'SIM NEXT EVENT', next_event
