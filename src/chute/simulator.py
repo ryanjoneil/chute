@@ -1,7 +1,6 @@
 from chute import event
 from functools import wraps
 import heapq
-from axi.indexer import Indexer
 
 PROCESSES = {}
 
@@ -49,16 +48,13 @@ class Simulator(object):
             heapq.heappush(heap, event_gen)
 
         while heap:
-            print 'heap =', heap
             generators = []  # Stack of event generators.
 
             while True:
                 # Get the next event generator off the heap.
                 try:
                     event_gen = heapq.heappop(heap)
-                    print 'event_gen', event_gen, 'peek =', event_gen.peek
                 except IndexError:
-                    raise
                     break  # Nothing to do. Quit the simulation.
 
                 # Save this to use later.
@@ -88,5 +84,4 @@ class Simulator(object):
 
             if clock >= time:
                 # Simulation has run to end time.
-                print 'quit'
                 break
