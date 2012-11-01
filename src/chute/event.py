@@ -83,9 +83,6 @@ class CreateEventGenerator(EventGenerator):
             self.num += 1
             yield e
 
-    def __repr__(self):
-        return 'CREATE'
-
 
 class ProcessEventGenerator(EventGenerator):
     def __init__(self, create_event):
@@ -103,7 +100,8 @@ class ProcessEventGenerator(EventGenerator):
         super(ProcessEventGenerator, self).__init__(create_event.clock)
 
     def __iter__(self):
-        for args in self._process.next():
+        while True:
+            args = self._process.next()
             e = Event(
                 self.clock,
                 args[0],
