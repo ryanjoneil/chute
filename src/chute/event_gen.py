@@ -81,6 +81,8 @@ class ProcessEventGenerator(EventGenerator):
         super(ProcessEventGenerator, self).__init__(create_event.clock)
 
     def __iter__(self):
+        # TODO: this has to get the current simulation time? or what? how
+        #       do we get actual times off the hold events?
         while True:
             # This is for Python 2 vs, Python 3.
             try:
