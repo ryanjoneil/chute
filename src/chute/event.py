@@ -35,7 +35,6 @@ class EventGenerator(object):
         self._iter = iter(self)
         self._next = None
         self._done = False
-        self.peek
 
     def __lt__(self, other):
         return self.peek < other.peek
