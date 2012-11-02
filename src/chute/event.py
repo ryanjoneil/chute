@@ -24,9 +24,9 @@ class Event(object):
 
         return None
 
-    def ok(self, clock):
+    def ok(self, simulator):
         '''Returns True if the event can be processed, False otherwise.'''
-        return True  # TODO: deal with request, etc.
+        return True
 
 
 class EventGenerator(object):

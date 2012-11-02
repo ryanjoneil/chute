@@ -46,7 +46,7 @@ class Simulator(object):
         'time fulfilled',    # Time that event is fulfilled.
         'time waited',       # Time that event spent waiting.
         'event type',        # Event type (create, request, etc.).
-        'process name',      # Process name (e.g. customer)
+        'process name',      # Process name (e.g. 'customer')
         'process instance',  # Process instance number (e.g. 5)
         'objects'            # Objects acted upon (e.g., ['server 1', etc.])
     ]
@@ -79,11 +79,11 @@ class Simulator(object):
             - time fulfilled:    time that event is fulfilled.
             - time waited:       time that event spent waiting.
             - event type:        event type (create, request, etc.).
-            - process name:      process name (e.g. customer)
+            - process name:      process name (e.g. 'customer')
             - process instance:  process instance number (e.g. 5)
             - objects:           objects acted upon (e.g., ['server 1', etc.])
         '''
-        clock = 0
+        self.clock = 0
 
         # A heap of event generators, prioritized by their next event times.
         heap = []
@@ -105,20 +105,20 @@ class Simulator(object):
                 generators.append(event_gen)
 
                 # See if it has an event we can process.
-                if event_gen.peek.ok(clock):
+                if event_gen.peek.ok(self):
                     next_event = event_gen.next
-                    if next_event.clock > clock:
-                        clock = next_event.clock
+                    if next_event.clock > self.clock:
+                        self.clock = next_event.clock
 
                     # If this event is past our time, stop.
-                    if clock > time:
+                    if self.clock > time:
                         break
 
                     # Generate a DES message.
                     message = {
                         'time sent':        next_event.clock,
-                        'time fulfilled':   clock,
-                        'time waited':      clock - next_event.clock,
+                        'time fulfilled':   self.clock,
+                        'time waited':      self.clock - next_event.clock,
                         'event type':       next_event.event_type,
                         'process name':     next_event.process_name,
                         'process instance': next_event.process_instance,
@@ -146,6 +146,6 @@ class Simulator(object):
             while generators:
                 heapq.heappush(heap, generators.pop())
 
-            if clock > time:
+            if self.clock > time:
                 # Simulation has run to end time.
                 break
