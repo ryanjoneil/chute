@@ -48,7 +48,7 @@ class Simulator(object):
         'event type',        # Event type (create, request, etc.).
         'process name',      # Process name (e.g. 'customer')
         'process instance',  # Process instance number (e.g. 5)
-        'objects'            # Objects acted upon (e.g., ['server 1', etc.])
+        'assigned'           # Objects assigned (e.g., ['server 1', etc.])
     ]
 
     def __init__(self, out=sys.stdout, fmt='csv'):
@@ -68,6 +68,38 @@ class Simulator(object):
             self.writer = DictWriter(self.out, self.MESSAGE_FIELDS)
             self.writer.writeheader()
 
+        self.clock = 0
+        self.assigned = {}
+        self.hold = set()
+
+    def assign(self, requester, requested):
+        '''True if the requested object can be assigned to requester.'''
+        # Requesters are not allowed more objects if they are currently
+        # assigned as resources to something else.
+        if requester in self.assigned:
+            return False
+
+        # Objects cannot be assigned if they are currently holding others.
+        if requested in self.hold:
+            return False
+
+        # Sanity check: assigning something requester already has should
+        # always return True.
+        try:
+            if self.assigned[requested] is requester:
+                return True
+            return False
+        except KeyError:  # Unassigned. Assign to requester.
+            self.assigned[requested] = requester
+            return True
+
+    def release(self, requester, requested):
+        '''Releases the requested object from requester.'''
+
+    def hold(self):
+        # TODO: implement me
+        pass
+
     def run(self, time):
         '''
         Run the simulation until a particular time or until no more events
@@ -81,9 +113,10 @@ class Simulator(object):
             - event type:        event type (create, request, etc.).
             - process name:      process name (e.g. 'customer')
             - process instance:  process instance number (e.g. 5)
-            - objects:           objects acted upon (e.g., ['server 1', etc.])
+            - assigned:          objects assigned (e.g., ['server 1', etc.])
         '''
         self.clock = 0
+        self.assigned = {}
 
         # A heap of event generators, prioritized by their next event times.
         heap = []
@@ -122,7 +155,7 @@ class Simulator(object):
                         'event type':       next_event.event_type,
                         'process name':     next_event.process_name,
                         'process instance': next_event.process_instance,
-                        'objects':          []  # TODO: fill this in
+                        'assigned':         list(map(str, next_event.assigned))
                     }
 
                     if self.fmt == 'csv':

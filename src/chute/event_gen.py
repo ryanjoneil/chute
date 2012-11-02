@@ -91,6 +91,7 @@ class ProcessEventGenerator(EventGenerator):
             e = args[0](
                 self.clock,
                 self.create_event.process,
-                self.create_event.process_instance
+                self.create_event.process_instance,
+                event_args=args[1:]
             )
             yield e
