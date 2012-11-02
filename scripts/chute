@@ -5,7 +5,7 @@ from chute import Simulator
 import sys
 
 if __name__ == '__main__':
-    # Set up command line options.
+    # Set up command line     .
     parser = ArgumentParser(description='Run the chute simulator.')
 
     parser.add_argument(
@@ -21,24 +21,24 @@ if __name__ == '__main__':
         help='csv (default) or json'
     )
 
-    # Get and check command line options.
-    options = parser.parse_args()
-    if not options.models:
+    # Get and check command line args.
+    args = parser.parse_args()
+    if not args.models:
         parser.error('model file required')
 
-    if options.time <= 0:
+    if args.time <= 0:
         parser.error('time must be > 0')
 
-    if options.format:
-        if options.format not in ('csv', 'json'):
+    if args.format:
+        if args.format not in ('csv', 'json'):
             parser.error('valid output formats are csv and json')
     else:
-        options.format = 'csv'
+        args.format = 'csv'
 
     # Load the model file. This will register all our processes with chute.
-    for model in options.models:
+    for model in args.models:
         exec(open(model))
 
     # And run the simulator
-    s = Simulator(out=sys.stdout, fmt=options.format)
-    s.run(options.time)
+    s = Simulator(out=sys.stdout, fmt=args.format)
+    s.run(args.time)

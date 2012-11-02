@@ -10,7 +10,3 @@ def customer():
     yield chute.request, 'server 2'
     # yield chute.hold(chute.dist.exponential(0.25))
     # yield chute.release('server 1')
-
-if __name__ == '__main__':
-    s = chute.Simulator()
-    s.run(100)
