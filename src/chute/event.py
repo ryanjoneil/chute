@@ -215,20 +215,29 @@ class ReleaseEvent(Event):
 
     def ok(self, simulator):
         '''A process cannot hold if it is assigned to something else.'''
-        assigned = simulator.resources(self)
-        release_tuples = []
-        for e in self.event_args:
-            if type(e) not in (list, tuple):
-                e = assigned.intersection(set([e]))
-            else:
-                e = assigned.intersection(set(e))
-            release_tuples.append(e)
+        assigned = set(simulator.resources(self))
 
-        # Find an order of resources to remove to satisfy release criteria.
-        order = self._find_order(simulator.resources(self), release_tuples)
-        if order:
-            for o in order:
-                simulator.release(self, o)
+        if self.event_args:
+            release_tuples = []
+            for e in self.event_args:
+                if type(e) not in (list, tuple):
+                    e = assigned.intersection(set([e]))
+                else:
+                    e = assigned.intersection(set(e))
+                release_tuples.append(e)
+
+            # Find an order of resources to remove to satisfy release criteria.
+            order = self._find_order(simulator.resources(self), release_tuples)
+            if order:
+                for o in order:
+                    simulator.release(self, o)
+                return True
+
+            return False
+
+        else:
+            # Nothing released specifically, so release everything.
+            for to_release in assigned:
+                simulator.release(self, to_release)
             return True
 
-        return False

@@ -11,3 +11,4 @@ def customer():
     yield chute.hold, 2 #chute.dist.exponential(0.25)
     yield chute.release, ['server 1', 'server 2'], 'manager'
     #yield chute.release, 'server 1'
+    #yield chute.release
