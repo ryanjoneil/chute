@@ -1,3 +1,4 @@
+from chute.event import Event
 from chute.event_gen import CreateEventGenerator
 from csv import DictWriter
 from functools import wraps
@@ -49,6 +50,7 @@ class Simulator(object):
         'process name',      # Process name (e.g. 'customer')
         'process instance',  # Process instance number (e.g. 5)
         'assigned'           # Objects assigned (e.g., ['server 1', etc.])
+                             # after the event is fulfilled
     ]
 
     def __init__(self, out=sys.stdout, fmt='csv'):
@@ -70,11 +72,25 @@ class Simulator(object):
 
         self.clock = 0
         self.assigned = {}
+        self.assignees = {}
         self.holding = set()
+
+    def _get_resource(self, resource):
+        '''
+        Converts a resource into the appropriate key. For most resources
+        this is just the resource itself. For Events, this is the
+        EventGenerator that created it. That way we can have different
+        events (RequestEvent, HoldEvent, ReleaseEvent) from the same process
+        referencing the same assigned resources.
+        '''
+        if isinstance(resource, Event):
+            return resource.event_gen
+        else:
+            return resource
 
     def assign(self, requester, requested):
         '''True if the requested object can be assigned to requester.'''
-        # TODO: deal with logic where one process is requesting another
+        requester = self._get_resource(requester)
 
         # Requesters are not allowed more objects if they are currently
         # assigned as resources to something else.
@@ -91,12 +107,19 @@ class Simulator(object):
             if self.assigned[requested] is requester:
                 return True
             return False
+
         except KeyError:  # Unassigned. Assign to requester.
             self.assigned[requested] = requester
+            try:
+                self.assignees[requester].add(requested)
+            except KeyError:
+                self.assignees[requester] = set([requested])
             return True
 
     def hold(self, requester):
         '''True if the requester is allowed to hold objects.'''
+        requester = self._get_resource(requester)
+
         if requester not in self.assigned and requester not in self.holding:
             self.holding.add(requester)
             return True
@@ -104,10 +127,14 @@ class Simulator(object):
 
     def release(self, requester):
         '''Releases the requested object from requester.'''
-        # TODO: make this better.
-        for key, val in self.assigned.items():
-            if val is requester:
-                del self.assigned[key]
+        requester = self._get_resource(requester)
+
+        for val in self.assignees[requester]:
+            del self.assigned[val]
+
+        # TODO: only delete those that need deletin'
+        del self.assignees[requester]
+
         return True
 
     def run(self, time):
@@ -124,6 +151,7 @@ class Simulator(object):
             - process name:      process name (e.g. 'customer')
             - process instance:  process instance number (e.g. 5)
             - assigned:          objects assigned (e.g., ['server 1', etc.])
+                                 after the event is fulfilled
         '''
         self.clock = 0
         self.assigned = {}
@@ -159,10 +187,15 @@ class Simulator(object):
 
                     # Format the assigned list for CSV. For other formats
                     # just use the list of strings we have.
+                    try:
+                        alist = self.assignees[self._get_resource(next_event)]
+                    except KeyError:
+                        alist = []
+
                     if self.fmt == 'csv':
-                        aout = ', '.join(str(x) for x in next_event.assigned)
+                        aout = ', '.join(str(x) for x in alist)
                     else:
-                        aout = list(map(str, next_event.assigned))
+                        aout = list(map(str, alist))
 
                     # Generate a DES message.
                     message = {

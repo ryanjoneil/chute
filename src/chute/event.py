@@ -1,11 +1,11 @@
 class Event(object):
-    def __init__(self, event_type, event_gen, clock, process, process_instance):
+    def __init__(self, event_type, event_gen, clock, process, process_inst):
         self.event_type = event_type
         self.event_gen = event_gen  # Event generator.
         self.clock = clock
         self.process = process
         self.process_name = process.__name__
-        self.process_instance = process_instance
+        self.process_instance = process_inst
 
         self.assigned = []  # Resources assigned to a process.
         self.hold = 0       # Amount of time to wait before the next event.
@@ -121,7 +121,7 @@ class RequestEvent(Event):
             is_assigned = False
             for option in request_options:
                 # Try to get this object from the simulator.
-                if simulator.assign(self.event_gen, option):
+                if simulator.assign(self, option):
                     self.unassigned.remove(request_options)
                     self.assigned.append(option)
                     is_assigned = True
@@ -192,4 +192,4 @@ class ReleaseEvent(Event):
     def ok(self, simulator):
         '''A process cannot hold if it is assigned to something else.'''
         # TODO: make this better. Should hold and release against the generator
-        return simulator.release(self.event_gen)
+        return simulator.release(self)
