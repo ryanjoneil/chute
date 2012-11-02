@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from chute import Simulator
+import os
 import sys
 
 if __name__ == '__main__':
@@ -37,7 +38,7 @@ if __name__ == '__main__':
 
     # Load the model file. This will register all our processes with chute.
     for model in args.models:
-        exec(open(model))
+        exec(os.linesep.join(open(model)))
 
     # And run the simulator
     s = Simulator(out=sys.stdout, fmt=args.format)

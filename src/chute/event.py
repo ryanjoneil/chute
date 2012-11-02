@@ -14,8 +14,8 @@ class Event(object):
             self.event_type
         )
 
-    def __cmp__(self, other):
-        return cmp(self.clock, other.clock)
+    def __lt__(self, other):
+        return self.clock < other.clock
 
     def spawn(self):
         '''Either spawns a new event generator, or returns None.'''
@@ -37,8 +37,8 @@ class EventGenerator(object):
         self._done = False
         self.peek
 
-    def __cmp__(self, other):
-        return cmp(self.peek, other.peek)
+    def __lt__(self, other):
+        return self.peek < other.peek
 
     @property
     def done(self):
@@ -47,17 +47,27 @@ class EventGenerator(object):
     @property
     def peek(self):
         if self._next is None:
-            self._next = self._iter.next()
+            try:
+                self._next = self._iter.next()  # Python 2
+            except AttributeError:
+                self._next = next(self._iter)   # Python 3
+
         return self._next
 
     @property
     def next(self):
         n = self._next
         try:
-            self._next = self._iter.next()
+            # This is for Python 2 vs, Python 3.
+            try:
+                self._next = self._iter.next()  # Python 2
+            except AttributeError:
+                self._next = next(self._iter)   # Python 3
+
         except StopIteration:
             self._next = None
             self._done = True
+
         return n
 
 
@@ -101,7 +111,12 @@ class ProcessEventGenerator(EventGenerator):
 
     def __iter__(self):
         while True:
-            args = self._process.next()
+            # This is for Python 2 vs, Python 3.
+            try:
+                args = self._process.next()  # Python 2
+            except AttributeError:
+                args = next(self._process)   # Python 3
+
             e = Event(
                 self.clock,
                 args[0],
@@ -109,6 +124,3 @@ class ProcessEventGenerator(EventGenerator):
                 self.create_event.process_instance
             )
             yield e
-
-    def __repr__(self):
-        return 'PROCESS %s' % (self.create_event.process_instance)
