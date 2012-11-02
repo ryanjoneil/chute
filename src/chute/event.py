@@ -189,7 +189,46 @@ class ReleaseEvent(Event):
         super(ReleaseEvent, self).__init__(ReleaseEvent.EVENT_TYPE, *args)
         self.event_args = kwds['event_args']
 
+    def _find_order(self, assigned, release_tuples, order=[]):
+        '''Finds the first feasible order of resources to release.'''
+        try:
+            release_tup = release_tuples[0]
+        except IndexError:
+            return order
+
+        # Use backtracking to build a list of items to release that
+        # will satisfy all the release arguments, if such a list exists.
+        for to_release in release_tup:
+            if to_release in assigned:
+                new_assigned = set(assigned)
+                new_assigned.remove(to_release)
+                new_order = self._find_order(
+                    new_assigned,
+                    release_tuples[1:],
+                    order + [to_release]
+                )
+
+                if new_order is not False:
+                    return new_order
+
+        return False
+
     def ok(self, simulator):
         '''A process cannot hold if it is assigned to something else.'''
-        # TODO: make this better. Should hold and release against the generator
-        return simulator.release(self)
+        assigned = simulator.resources(self)
+        release_tuples = []
+        for e in self.event_args:
+            if type(e) not in (list, tuple):
+                e = assigned.intersection(set([e]))
+            else:
+                e = assigned.intersection(set(e))
+            release_tuples.append(e)
+
+        # Find an order of resources to remove to satisfy release criteria.
+        order = self._find_order(simulator.resources(self), release_tuples)
+        if order:
+            for o in order:
+                simulator.release(self, o)
+            return True
+
+        return False

@@ -9,4 +9,5 @@ import chute
 def customer():
     yield chute.request, ['server 1', 'server 2'], 'manager'
     yield chute.hold, 2 #chute.dist.exponential(0.25)
-    yield chute.release
+    yield chute.release, ['server 1', 'server 2'], 'manager'
+    #yield chute.release, 'server 1'

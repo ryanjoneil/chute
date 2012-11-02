@@ -49,8 +49,8 @@ class Simulator(object):
         'event type',        # Event type (create, request, etc.).
         'process name',      # Process name (e.g. 'customer')
         'process instance',  # Process instance number (e.g. 5)
-        'assigned'           # Objects assigned (e.g., ['server 1', etc.])
-                             # after the event is fulfilled
+        'assigned'           # Resources assigned after the event is fulfilled
+                             # (e.g., ['server 1', etc.])
     ]
 
     def __init__(self, out=sys.stdout, fmt='csv'):
@@ -88,9 +88,10 @@ class Simulator(object):
         else:
             return resource
 
-    def assign(self, requester, requested):
+    def assign(self, requester, resource):
         '''True if the requested object can be assigned to requester.'''
         requester = self._get_resource(requester)
+        resource = self._get_resource(resource)
 
         # Requesters are not allowed more objects if they are currently
         # assigned as resources to something else.
@@ -98,22 +99,22 @@ class Simulator(object):
             return False
 
         # Objects cannot be assigned if they are currently holding others.
-        if requested in self.holding:
+        if resource in self.holding:
             return False
 
         # Sanity check: assigning something requester already has should
         # always return True.
         try:
-            if self.assigned[requested] is requester:
+            if self.assigned[resource] is requester:
                 return True
             return False
 
         except KeyError:  # Unassigned. Assign to requester.
-            self.assigned[requested] = requester
+            self.assigned[resource] = requester
             try:
-                self.assignees[requester].add(requested)
+                self.assignees[requester].add(resource)
             except KeyError:
-                self.assignees[requester] = set([requested])
+                self.assignees[requester] = set([resource])
             return True
 
     def hold(self, requester):
@@ -125,15 +126,24 @@ class Simulator(object):
             return True
         return False
 
-    def release(self, requester):
+    def resources(self, requester):
+        '''Returns the resources assigned to a requester.'''
+        try:
+            return self.assignees[self._get_resource(requester)]
+        except KeyError:
+            return set()
+
+    def release(self, requester, resource):
         '''Releases the requested object from requester.'''
         requester = self._get_resource(requester)
+        resource = self._get_resource(resource)
 
-        for val in self.assignees[requester]:
-            del self.assigned[val]
-
-        # TODO: only delete those that need deletin'
-        del self.assignees[requester]
+        try:
+            assert self.assigned[resource] is requester
+            del self.assigned[resource]
+            self.assignees[requester].discard(resource)
+        except:
+            return False
 
         return True
 
@@ -150,8 +160,8 @@ class Simulator(object):
             - event type:        event type (create, request, etc.).
             - process name:      process name (e.g. 'customer')
             - process instance:  process instance number (e.g. 5)
-            - assigned:          objects assigned (e.g., ['server 1', etc.])
-                                 after the event is fulfilled
+            - assigned:          resources assigned after the event is
+                                 fulfilled (e.g., ['server 1', etc.])
         '''
         self.clock = 0
         self.assigned = {}
@@ -187,11 +197,7 @@ class Simulator(object):
 
                     # Format the assigned list for CSV. For other formats
                     # just use the list of strings we have.
-                    try:
-                        alist = self.assignees[self._get_resource(next_event)]
-                    except KeyError:
-                        alist = []
-
+                    alist = self.resources(next_event)
                     if self.fmt == 'csv':
                         aout = ', '.join(str(x) for x in alist)
                     else:
