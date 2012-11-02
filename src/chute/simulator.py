@@ -44,7 +44,7 @@ class Simulator(object):
     MESSAGE_FIELDS = [
         'time sent',         # Time an event is sent to the simulator.
         'time fulfilled',    # Time that event is fulfilled.
-        'waited',            # Time that event spent waiting.
+        'time waited',       # Time that event spent waiting.
         'event type',        # Event type (create, request, etc.).
         'process name',      # Process name (e.g. customer)
         'process instance',  # Process instance number (e.g. 5)
@@ -77,7 +77,7 @@ class Simulator(object):
 
             - time sent:         time an event is sent to the simulator.
             - time fulfilled:    time that event is fulfilled.
-            - waited:            time that event spent waiting.
+            - time waited:       time that event spent waiting.
             - event type:        event type (create, request, etc.).
             - process name:      process name (e.g. customer)
             - process instance:  process instance number (e.g. 5)
@@ -118,7 +118,7 @@ class Simulator(object):
                     message = {
                         'time sent':        next_event.clock,
                         'time fulfilled':   clock,
-                        'waited':           clock - next_event.clock,
+                        'time waited':      clock - next_event.clock,
                         'event type':       next_event.event_type,
                         'process name':     next_event.process_name,
                         'process instance': next_event.process_instance,
