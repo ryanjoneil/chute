@@ -1,3 +1,44 @@
 #!/usr/bin/env python
 
-# STUB
+from argparse import ArgumentParser
+from chute import Simulator
+import sys
+
+if __name__ == '__main__':
+    # Set up command line options.
+    parser = ArgumentParser(description='Run the chute simulator.')
+
+    parser.add_argument(
+        'models', nargs='+', metavar='MODEL',
+        help='model file to incorporate in the simulation'
+    )
+    parser.add_argument(
+        '-t', '--time', dest='time', type=int, metavar='TIME',
+        help='clock time to run simulation for'
+    )
+    parser.add_argument(
+        '-f', '--format', dest='format', metavar='FORMAT',
+        help='csv (default) or json'
+    )
+
+    # Get and check command line options.
+    options = parser.parse_args()
+    if not options.models:
+        parser.error('model file required')
+
+    if options.time <= 0:
+        parser.error('time must be > 0')
+
+    if options.format:
+        if options.format not in ('csv', 'json'):
+            parser.error('valid output formats are csv and json')
+    else:
+        options.format = 'csv'
+
+    # Load the model file. This will register all our processes with chute.
+    for model in options.models:
+        exec(open(model))
+
+    # And run the simulator
+    s = Simulator(out=sys.stdout, fmt=options.format)
+    s.run(options.time)

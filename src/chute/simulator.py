@@ -1,6 +1,10 @@
 from chute import event
+from csv import DictWriter
 from functools import wraps
 import heapq
+import json
+import os
+import sys
 
 PROCESSES = {}
 
@@ -37,8 +41,48 @@ def process(interarrival):
 
 
 class Simulator(object):
+    MESSAGE_FIELDS = [
+        'time sent',         # Time an event is sent to the simulator.
+        'time fulfilled',    # Time that event is fulfilled.
+        'waited',            # Time that event spent waiting.
+        'event type',        # Event type (create, request, etc.).
+        'process name',      # Process name (e.g. customer)
+        'process instance',  # Process instance number (e.g. 5)
+        'objects'            # Objects acted upon (e.g., ['server 1', etc.])
+    ]
+
+    def __init__(self, out=sys.stdout, fmt='csv'):
+        '''
+        Instantiates a simulator. Parameters:
+
+            - out (default=sys.stdout): output file handle
+            - fmt (default='csv'): 'csv' or 'json'
+        '''
+        self.out = out
+        self.fmt = fmt
+
+        # TODO: Abstract the message handling component so we can allow
+        #       for any format. Provide a Message class and a message hook
+        #       so we can also measure things like queue length.
+        if fmt == 'csv':
+            self.writer = DictWriter(self.out, self.MESSAGE_FIELDS)
+            self.writer.writeheader()
+
     def run(self, time):
-        '''Run the simulation until a particular time.'''
+        '''
+        Run the simulation until a particular time or until no more events
+        are generated, whichever comes first. As events are processed, messages
+        are generated in the format specified upon instantiation. Messages
+        contain the following fields:
+
+            - time sent:         time an event is sent to the simulator.
+            - time fulfilled:    time that event is fulfilled.
+            - waited:            time that event spent waiting.
+            - event type:        event type (create, request, etc.).
+            - process name:      process name (e.g. customer)
+            - process instance:  process instance number (e.g. 5)
+            - objects:           objects acted upon (e.g., ['server 1', etc.])
+        '''
         clock = 0
 
         # A heap of event generators, prioritized by their next event times.
@@ -63,8 +107,28 @@ class Simulator(object):
                 # See if it has an event we can process.
                 if event_gen.peek.ok(clock):
                     next_event = event_gen.next
-                    clock = next_event.clock
-                    print 'next_event', next_event
+                    if next_event.clock > clock:
+                        clock = next_event.clock
+
+                    # If this event is past our time, stop.
+                    if clock > time:
+                        break
+
+                    # Generate a DES message.
+                    message = {
+                        'time sent':        next_event.clock,
+                        'time fulfilled':   clock,
+                        'waited':           clock - next_event.clock,
+                        'event type':       next_event.event_type,
+                        'process name':     next_event.process_name,
+                        'process instance': next_event.process_instance,
+                        'objects':          []  # TODO: fill this in
+                    }
+
+                    if self.fmt == 'csv':
+                        self.writer.writerow(message)
+                    elif self.fmt == 'json':
+                        self.out.write(json.dumps(message) + os.linesep)
 
                     # If the generator is done, take it off our list.
                     if event_gen.done:
@@ -82,6 +146,6 @@ class Simulator(object):
             while generators:
                 heapq.heappush(heap, generators.pop())
 
-            if clock >= time:
+            if clock > time:
                 # Simulation has run to end time.
                 break
