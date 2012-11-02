@@ -1,6 +1,7 @@
-from . import dist
-from .simulator import Simulator, process
+from chute import dist
+from chute.event import RequestEvent
+from chute.simulator import Simulator, process
 
-__all__ = 'Simulator', 'process'
+__all__ = 'Simulator', 'process', 'request'
 
-request = 'request'
+request = RequestEvent

@@ -6,7 +6,7 @@ import chute
 # that is hashable by Python, so really anything at all:
 @chute.process(chute.dist.exponential(1))
 def customer():
-    yield chute.request, 'server 1'
-    yield chute.request, 'server 2'
+    yield chute.request, ['server 1', 'server 2']
+    #yield chute.request, 'server 2'
     # yield chute.hold(chute.dist.exponential(0.25))
     # yield chute.release('server 1')

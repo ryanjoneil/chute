@@ -1,4 +1,4 @@
-from chute import event
+from chute.event_gen import CreateEventGenerator
 from csv import DictWriter
 from functools import wraps
 import heapq
@@ -88,7 +88,7 @@ class Simulator(object):
         # A heap of event generators, prioritized by their next event times.
         heap = []
         for process, interarrival in PROCESSES.items():
-            event_gen = event.CreateEventGenerator(process, interarrival)
+            event_gen = CreateEventGenerator(process, interarrival)
             heapq.heappush(heap, event_gen)
 
         while heap:
