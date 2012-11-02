@@ -70,17 +70,19 @@ class Simulator(object):
 
         self.clock = 0
         self.assigned = {}
-        self.hold = set()
+        self.holding = set()
 
     def assign(self, requester, requested):
         '''True if the requested object can be assigned to requester.'''
+        # TODO: deal with logic where one process is requesting another
+
         # Requesters are not allowed more objects if they are currently
         # assigned as resources to something else.
         if requester in self.assigned:
             return False
 
         # Objects cannot be assigned if they are currently holding others.
-        if requested in self.hold:
+        if requested in self.holding:
             return False
 
         # Sanity check: assigning something requester already has should
@@ -93,12 +95,20 @@ class Simulator(object):
             self.assigned[requested] = requester
             return True
 
-    def release(self, requester, requested):
-        '''Releases the requested object from requester.'''
+    def hold(self, requester):
+        '''True if the requester is allowed to hold objects.'''
+        if requester not in self.assigned and requester not in self.holding:
+            self.holding.add(requester)
+            return True
+        return False
 
-    def hold(self):
-        # TODO: implement me
-        pass
+    def release(self, requester):
+        '''Releases the requested object from requester.'''
+        # TODO: make this better.
+        for key, val in self.assigned.items():
+            if val is requester:
+                del self.assigned[key]
+        return True
 
     def run(self, time):
         '''

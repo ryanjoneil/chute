@@ -1,4 +1,4 @@
-from chute.event import Event, CreateEvent
+from chute.event import CreateEvent
 
 
 class EventGenerator(object):
@@ -60,7 +60,7 @@ class CreateEventGenerator(EventGenerator):
     def __iter__(self):
         while True:
             self.clock += self.interarrival()
-            e = CreateEvent(self.clock, self.process, self.num)
+            e = CreateEvent(self, self.clock, self.process, self.num)
             self.num += 1
             yield e
 
@@ -88,7 +88,12 @@ class ProcessEventGenerator(EventGenerator):
             except AttributeError:
                 args = next(self._process)   # Python 3
 
+            # If not a tuple, force it to be a tuple of length 1.
+            if not isinstance(args, tuple):
+                args = (args,)
+
             e = args[0](
+                self,
                 self.clock,
                 self.create_event.process,
                 self.create_event.process_instance,
