@@ -157,6 +157,13 @@ class Simulator(object):
                     if self.clock > time:
                         break
 
+                    # Format the assigned list for CSV. For other formats
+                    # just use the list of strings we have.
+                    if self.fmt == 'csv':
+                        aout = ', '.join(str(x) for x in next_event.assigned)
+                    else:
+                        aout = list(map(str, next_event.assigned))
+
                     # Generate a DES message.
                     message = {
                         'time sent':        next_event.clock,
@@ -165,7 +172,7 @@ class Simulator(object):
                         'event type':       next_event.event_type,
                         'process name':     next_event.process_name,
                         'process instance': next_event.process_instance,
-                        'assigned':         list(map(str, next_event.assigned))
+                        'assigned':         aout
                     }
 
                     if self.fmt == 'csv':

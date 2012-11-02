@@ -14,11 +14,11 @@ if __name__ == '__main__':
         help='model file to incorporate in the simulation'
     )
     parser.add_argument(
-        '-t', '--time', dest='time', type=int, metavar='TIME',
+        '-t', '--time', dest='time', type=int, metavar='TIME', required=True,
         help='clock time to run simulation for'
     )
     parser.add_argument(
-        '-f', '--format', dest='format', metavar='FORMAT',
+        '-f', '--format', dest='format', metavar='FMT',
         help='csv (default) or json'
     )
 
