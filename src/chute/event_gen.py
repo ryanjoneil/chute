@@ -2,7 +2,8 @@ from chute.event import CreateEvent
 
 
 class EventGenerator(object):
-    def __init__(self, clock=0):
+    def __init__(self, simulator, clock=0):
+        self.simulator = simulator
         self.clock = clock
         self._iter = iter(self)
         self._next = None
@@ -43,7 +44,7 @@ class EventGenerator(object):
 
 
 class CreateEventGenerator(EventGenerator):
-    def __init__(self, process, interarrival, clock=0):
+    def __init__(self, simulator, process, interarrival, clock=0):
         '''
         A generator of create events. These events add actors to the simulation
         which are modeled by calling either a function or a class.
@@ -55,7 +56,7 @@ class CreateEventGenerator(EventGenerator):
         self.process = process
         self.interarrival = interarrival
         self.num = 0
-        super(CreateEventGenerator, self).__init__(clock)
+        super(CreateEventGenerator, self).__init__(simulator, clock)
 
     def __iter__(self):
         while True:
@@ -66,7 +67,7 @@ class CreateEventGenerator(EventGenerator):
 
 
 class ProcessEventGenerator(EventGenerator):
-    def __init__(self, create_event):
+    def __init__(self, simulator, create_event):
         '''
         A generator of events for a process running in the system. This
         generator is built once a 'create' Event has been constructed.
@@ -78,11 +79,12 @@ class ProcessEventGenerator(EventGenerator):
             self._process = iter(create_event.process()())
         else:
             self._process = iter(create_event.process())
-        super(ProcessEventGenerator, self).__init__(create_event.clock)
+        super(ProcessEventGenerator, self).__init__(
+            simulator,
+            create_event.clock
+        )
 
     def __iter__(self):
-        # TODO: this has to get the current simulation time? or what? how
-        #       do we get actual times off the hold events?
         while True:
             # This is for Python 2 vs, Python 3.
             try:

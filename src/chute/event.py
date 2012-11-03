@@ -19,6 +19,15 @@ class Event(object):
         )
 
     def __lt__(self, other):
+        # In the unlikely chance that two requests are at the same time,
+        # HoldRequest instances should always come first. This is to avoid
+        # requestors being assigned when they are trying to hold resources.
+        if self.clock == other.clock:
+            if isinstance(self, HoldEvent):
+                return True
+            elif isinstance(other, HoldEvent):
+                return False
+
         return self.clock < other.clock
 
     def spawn(self):
@@ -51,7 +60,7 @@ class CreateEvent(Event):
 
     def spawn(self):
         from chute.event_gen import ProcessEventGenerator
-        return ProcessEventGenerator(self)
+        return ProcessEventGenerator(self.event_gen.simulator, self)
 
 
 class RequestEvent(Event):
@@ -152,18 +161,29 @@ class HoldEvent(Event):
     def __init__(self, *args, **kwds):
         super(HoldEvent, self).__init__(HoldEvent.EVENT_TYPE, *args)
         self.event_args = kwds['event_args']
+        self.start_clock = self.event_gen.simulator.clock
 
         # Generate the time for hold.
-        # TODO: make this do something
         func = self.event_args[0]
         if callable(func):
             self.hold = func()
         else:
             self.hold = func
 
+        self.end_clock = self.start_clock + self.hold
+
+        # If we just were assigned something, then we start holding
+        # it immediately. If we aren't assigned anything, then we pause
+        # but there is not technically any holding.
+        if self.event_gen.simulator.resources(self):
+            self.event_gen.simulator.hold(self)
+
     def ok(self, simulator):
         '''A process cannot hold if it is assigned to something else.'''
-        return simulator.hold(self)
+        if simulator.clock >= self.end_clock:
+            simulator.unhold(self)
+            return True
+        return False
 
 
 class ReleaseEvent(Event):

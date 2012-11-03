@@ -126,6 +126,11 @@ class Simulator(object):
             return True
         return False
 
+    def unhold(self, requester):
+        '''Removes a requester from the holding list.'''
+        requester = self._get_resource(requester)
+        self.holding.discard(requester)
+
     def resources(self, requester):
         '''Returns the resources assigned to a requester.'''
         try:
@@ -169,7 +174,7 @@ class Simulator(object):
         # A heap of event generators, prioritized by their next event times.
         heap = []
         for process, interarrival in PROCESSES.items():
-            event_gen = CreateEventGenerator(process, interarrival)
+            event_gen = CreateEventGenerator(self, process, interarrival)
             heapq.heappush(heap, event_gen)
 
         while heap:
