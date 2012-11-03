@@ -43,6 +43,7 @@ def process(interarrival):
 
 class Simulator(object):
     MESSAGE_FIELDS = [
+        'simulation',        # Simulation number.
         'sent time',         # Time an event is sent to the simulator.
         'start time',        # Time an event starts processing.
         'stop time',         # Time that event stops processing..
@@ -53,13 +54,15 @@ class Simulator(object):
                              # (e.g., ['server 1', etc.])
     ]
 
-    def __init__(self, out=sys.stdout, fmt='csv'):
+    def __init__(self, num=1, out=sys.stdout, fmt='csv'):
         '''
         Instantiates a simulator. Parameters:
 
+            - num (default=1): simulation number
             - out (default=sys.stdout): output file handle
             - fmt (default='csv'): 'csv' or 'json'
         '''
+        self.num = num
         self.out = out
         self.fmt = fmt
 
@@ -68,7 +71,8 @@ class Simulator(object):
         #       so we can also measure things like queue length.
         if fmt == 'csv':
             self.writer = DictWriter(self.out, self.MESSAGE_FIELDS)
-            self.writer.writeheader()
+            if self.num < 1:
+                self.writer.writeheader()
 
         self.clock = 0
         self.assigned = {}
@@ -168,6 +172,7 @@ class Simulator(object):
         are generated in the format specified upon instantiation. Messages
         contain the following fields:
 
+            - simulation:        simuluation number.
             - sent time:         time an event is sent to the simulator.
             - start time:        time that event starts processing.
             - stop time:         time that event stops processing.
@@ -226,6 +231,7 @@ class Simulator(object):
 
                     # Generate a DES message.
                     message = {
+                        'simulation':       self.num,
                         'sent time':        event.sent_time,
                         'start time':       event.start_time,
                         'stop time':        event.stop_time,

@@ -14,6 +14,10 @@ if __name__ == '__main__':
         help='model file to incorporate in the simulation'
     )
     parser.add_argument(
+        '-n', '--num', dest='num', type=int, metavar='NUM', required=True,
+        help='number of simulations to run'
+    )
+    parser.add_argument(
         '-t', '--time', dest='time', type=int, metavar='TIME', required=True,
         help='clock time to run simulation for'
     )
@@ -27,6 +31,9 @@ if __name__ == '__main__':
     if not args.models:
         parser.error('model file required')
 
+    if args.num <= 0:
+        parser.error('num must be > 0')
+
     if args.time <= 0:
         parser.error('time must be > 0')
 
@@ -36,10 +43,12 @@ if __name__ == '__main__':
     else:
         args.format = 'csv'
 
-    # Load the model file. This will register all our processes with chute.
-    for model in args.models:
-        exec(os.linesep.join(open(model)))
-
-    # And run the simulator
-    s = Simulator(out=sys.stdout, fmt=args.format)
-    s.run(args.time)
+    for num in range(args.num):
+        # Load the model file.s This will register all our processes 
+        # with chute. We reload the environment before each simulation.
+        for model in args.models:
+            exec(os.linesep.join(open(model)))
+    
+        # And run the simulator
+        s = Simulator(num=num, out=sys.stdout, fmt=args.format)
+        s.run(args.time)
