@@ -85,6 +85,10 @@ class ProcessEventGenerator(EventGenerator):
         )
 
     def __iter__(self):
+        # Always use the stop time of the last event as the
+        # sent time of the next event.
+        last_event = self.create_event
+
         while True:
             # This is for Python 2 vs, Python 3.
             try:
@@ -98,9 +102,12 @@ class ProcessEventGenerator(EventGenerator):
 
             e = args[0](
                 self,
-                self.clock,
+                last_event.stop_time,
                 self.create_event.process,
                 self.create_event.process_instance,
                 event_args=args[1:]
             )
             yield e
+
+            # By the next iteration, e will have a stop_time.
+            last_event = e
