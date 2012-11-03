@@ -130,11 +130,11 @@ class RequestEvent(Event):
         # Convert each sequence of requested objects to a tuple, and
         # store it as unassigned. Once requested objects as assigned,
         # they go into the assigned set.
-        self.unassigned = set()
+        self.unassigned = []
         for e in self.event_args:
             if type(e) not in (list, tuple):
                 e = (e,)
-            self.unassigned.add(tuple(e))
+            self.unassigned.append(tuple(e))
 
     def stop(self, simulator):
         '''Assigns any requested objects that can be to the process.'''
@@ -144,20 +144,29 @@ class RequestEvent(Event):
         is_ok = True
 
         # Try and assign as much as possible of what is requested.
-        for request_options in list(self.unassigned):
+        new_unassigned = []
+        for request_options in self.unassigned:
             is_assigned = False
             for option in request_options:
+                # Ignore things already assigned.
+                if simulator.assigned_to(self, option):
+                    continue
+
                 # Try to get this object from the simulator.
                 if simulator.assign(self, option):
-                    self.unassigned.remove(request_options)
                     self.assigned.append(option)
                     is_assigned = True
                     break
 
+            if not is_assigned:
+                new_unassigned.append(request_options)
+
             # Allow is_ok to go to False, but keep trying to assing objects.
             is_ok = is_ok and is_assigned
 
-        self.stop_time = simulator.clock
+        self.unassigned = new_unassigned
+        if is_ok:
+            self.stop_time = simulator.clock
         return is_ok
 
 

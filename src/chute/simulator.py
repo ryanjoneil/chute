@@ -117,6 +117,15 @@ class Simulator(object):
                 self.assignees[requester] = set([resource])
             return True
 
+    def assigned_to(self, requester, resource):
+        '''True if the requested object is assigned to requester.'''
+        requester = self._get_resource(requester)
+        resource = self._get_resource(resource)
+        try:
+            return self.assigned[resource] is requester
+        except KeyError:
+            return False
+
     def hold(self, requester):
         '''True if the requester is allowed to hold objects.'''
         requester = self._get_resource(requester)
