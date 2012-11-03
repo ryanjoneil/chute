@@ -19,9 +19,9 @@ class EventGenerator(object):
     @property
     def peek(self):
         if self._next is None:
-            try:
+            if hasattr(self._iter, 'next'):
                 self._next = self._iter.next()  # Python 2
-            except AttributeError:
+            else:
                 self._next = next(self._iter)   # Python 3
 
         return self._next
@@ -91,9 +91,9 @@ class ProcessEventGenerator(EventGenerator):
 
         while True:
             # This is for Python 2 vs, Python 3.
-            try:
+            if hasattr(self._process, 'next'):
                 args = self._process.next()  # Python 2
-            except AttributeError:
+            else:
                 args = next(self._process)   # Python 3
 
             # If not a tuple, force it to be a tuple of length 1.
