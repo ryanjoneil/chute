@@ -43,9 +43,9 @@ def process(interarrival):
 
 class Simulator(object):
     MESSAGE_FIELDS = [
-        'time sent',         # Time an event is sent to the simulator.
-        'time fulfilled',    # Time that event is fulfilled.
-        'time waited',       # Time that event spent waiting.
+        'sent time',         # Time an event is sent to the simulator.
+        'start time',        # Time an event starts processing.
+        'stop time',         # Time that event stops processing..
         'event type',        # Event type (create, request, etc.).
         'process name',      # Process name (e.g. 'customer')
         'process instance',  # Process instance number (e.g. 5)
@@ -121,7 +121,7 @@ class Simulator(object):
         '''True if the requester is allowed to hold objects.'''
         requester = self._get_resource(requester)
 
-        if requester not in self.assigned and requester not in self.holding:
+        if requester not in self.assigned:
             self.holding.add(requester)
             return True
         return False
@@ -159,9 +159,9 @@ class Simulator(object):
         are generated in the format specified upon instantiation. Messages
         contain the following fields:
 
-            - time sent:         time an event is sent to the simulator.
-            - time fulfilled:    time that event is fulfilled.
-            - time waited:       time that event spent waiting.
+            - sent time:         time an event is sent to the simulator.
+            - start time:        time that event starts processing.
+            - stop time:         time that event stops processing.
             - event type:        event type (create, request, etc.).
             - process name:      process name (e.g. 'customer')
             - process instance:  process instance number (e.g. 5)
@@ -190,19 +190,26 @@ class Simulator(object):
                 # Save this to use later.
                 generators.append(event_gen)
 
-                # See if it has an event we can process.
-                if event_gen.peek.ok(self):
-                    next_event = event_gen.next
-                    if next_event.clock > self.clock:
-                        self.clock = next_event.clock
+                # The clock should always be the max time we've seen so far.
+                event = event_gen.peek
+                self.clock = max(self.clock, event.clock)
 
-                    # If this event is past our time, stop.
-                    if self.clock > time:
-                        break
+                # If this event is past our time, stop.
+                if self.clock > time:
+                    break
+
+                # See if it has an event we can process.
+                if event.start(self):
+                    # See if it can be processed in its entirety.
+                    if not event.stop(self):
+                        continue
+
+                    # Take this event off the queue.
+                    event_gen.next
 
                     # Format the assigned list for CSV. For other formats
                     # just use the list of strings we have.
-                    alist = self.resources(next_event)
+                    alist = self.resources(event)
                     if self.fmt == 'csv':
                         aout = ', '.join(str(x) for x in alist)
                     else:
@@ -210,12 +217,12 @@ class Simulator(object):
 
                     # Generate a DES message.
                     message = {
-                        'time sent':        next_event.clock,
-                        'time fulfilled':   self.clock,
-                        'time waited':      self.clock - next_event.clock,
-                        'event type':       next_event.event_type,
-                        'process name':     next_event.process_name,
-                        'process instance': next_event.process_instance,
+                        'sent time':        event.sent_time,
+                        'start time':       event.start_time,
+                        'stop time':        event.stop_time,
+                        'event type':       event.event_type,
+                        'process name':     event.process_name,
+                        'process instance': event.process_instance,
                         'assigned':         aout
                     }
 
@@ -229,17 +236,17 @@ class Simulator(object):
                         generators.pop()
 
                     # See if this event spawns a new event generator.
-                    next_gen = next_event.spawn()
+                    next_gen = event.spawn()
                     if next_gen is not None:
                         generators.append(next_gen)
 
                     break
 
+            # If this event is past our time, stop.
+            if self.clock > time:
+                break
+
             # Add back all the generators we removed in order to find
             # an event that could be processed.
             while generators:
                 heapq.heappush(heap, generators.pop())
-
-            if self.clock > time:
-                # Simulation has run to end time.
-                break

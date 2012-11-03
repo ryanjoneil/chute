@@ -8,7 +8,10 @@ class Event(object):
         self.process_instance = process_inst
 
         self.assigned = []  # Resources assigned to a process.
-        self.hold = 0       # Amount of time to wait before the next event.
+
+        self.sent_time = self.clock
+        self.start_time = None
+        self.stop_time = None
 
     def __str__(self):
         return '[%f] %s %d: %s' % (
@@ -34,9 +37,21 @@ class Event(object):
         '''Either spawns a new event generator, or returns None.'''
         return None
 
-    def ok(self, simulator):
+    def start(self, simulator):
         '''Returns True if the event can be processed, False otherwise.'''
-        return True
+        if not simulator.clock < self.clock:
+            if self.start_time is None:
+                self.start_time = simulator.clock
+            return True
+        return False
+
+    def stop(self, simulator):
+        '''Returns True if the event is processed, False otherwise.'''
+        if not simulator.clock < self.clock:
+            if self.stop_time is None:
+                self.stop_time = simulator.clock
+            return True
+        return False
 
 
 class CreateEvent(Event):
@@ -121,8 +136,11 @@ class RequestEvent(Event):
                 e = (e,)
             self.unassigned.add(tuple(e))
 
-    def ok(self, simulator):
+    def stop(self, simulator):
         '''Assigns any requested objects that can be to the process.'''
+        if simulator.clock < self.clock:
+            return False
+
         is_ok = True
 
         # Try and assign as much as possible of what is requested.
@@ -139,6 +157,7 @@ class RequestEvent(Event):
             # Allow is_ok to go to False, but keep trying to assing objects.
             is_ok = is_ok and is_assigned
 
+        self.stop_time = simulator.clock
         return is_ok
 
 
@@ -161,7 +180,6 @@ class HoldEvent(Event):
     def __init__(self, *args, **kwds):
         super(HoldEvent, self).__init__(HoldEvent.EVENT_TYPE, *args)
         self.event_args = kwds['event_args']
-        self.start_clock = self.event_gen.simulator.clock
 
         # Generate the time for hold.
         func = self.event_args[0]
@@ -170,20 +188,26 @@ class HoldEvent(Event):
         else:
             self.hold = func
 
-        self.end_clock = self.start_clock + self.hold
-
-        # If we just were assigned something, then we start holding
-        # it immediately. If we aren't assigned anything, then we pause
-        # but there is not technically any holding.
-        if self.event_gen.simulator.resources(self):
-            self.event_gen.simulator.hold(self)
-
-    def ok(self, simulator):
+    def start(self, simulator):
         '''A process cannot hold if it is assigned to something else.'''
-        if simulator.clock >= self.end_clock:
-            simulator.unhold(self)
+        if not simulator.clock < self.clock and simulator.hold(self):
+            # This will make out next process time in the simulator be
+            # the end of our hold period.
+            if self.start_time is None:
+                self.start_time = simulator.clock
+                self.clock = self.start_time + self.hold
             return True
+
         return False
+
+    def stop(self, simulator):
+        '''Unhold the process if enough time has passed.'''
+        if simulator.clock < self.clock:
+            return False
+        else:
+            simulator.unhold(self)
+            self.stop_time = simulator.clock
+            return True
 
 
 class ReleaseEvent(Event):
@@ -233,8 +257,11 @@ class ReleaseEvent(Event):
 
         return False
 
-    def ok(self, simulator):
-        '''A process cannot hold if it is assigned to something else.'''
+    def stop(self, simulator):
+        '''Release .'''
+        if simulator.clock < self.clock:  # Sanity check.
+            return False
+
         assigned = set(simulator.resources(self))
 
         if self.event_args:
@@ -251,6 +278,7 @@ class ReleaseEvent(Event):
             if order:
                 for o in order:
                     simulator.release(self, o)
+                self.stop_time = simulator.clock
                 return True
 
             return False
@@ -259,5 +287,5 @@ class ReleaseEvent(Event):
             # Nothing released specifically, so release everything.
             for to_release in assigned:
                 simulator.release(self, to_release)
+            self.stop_time = simulator.clock
             return True
-
