@@ -20,7 +20,8 @@ If you want to install it into your system's Python directories, run this instea
 $ sudo easy_install chute
 ```
 
-== Writing & Running Basic Simulations ==
+Writing & Running Basic Simulations
+-----------------------------------
 
 Simulations are intended to be as simple to create as possible. Type in the following and save it as *mm1_function.py*. This is one way an M/M/1 queue simulation might look.
 
@@ -38,7 +39,7 @@ Chute will create customer processes and put them into the simulation according 
 
 Let's run this simulation. Though you can do this directly in Python, it's simpler to use the *chute* command.
 
-```python
+```
 $ chute -h
 usage: chute [-h] -n NUM -t TIME [-f FMT] MODEL [MODEL ...]
 
@@ -77,14 +78,14 @@ etc.
 
 The default output is CSV format. The following fields are provided.
 
-|simulation|Simulation number.|
-|sent time|Time an event is sent to the simulator.|
-|start time|Time an event starts processing.|
-|stop time|Time that event stops processing.|
-|event type|Event type (create, request, etc.).|
-|process name|Process name (e.g. 'customer').|
-|process instance|Process instance number (e.g. 5).|
-|assigned|Resources assigned after the event is fulfilled (e.g., ['server 1', etc.]).|
+* simulation: Simulation number.
+* sent time: Time an event is sent to the simulator.
+* start time: Time an event starts processing.
+* stop time: Time that event stops processing.
+* event type: Event type (create, request, etc.).
+* process name: Process name (e.g. 'customer').
+* process instance: Process instance number (e.g. 5).
+* assigned: Resources assigned after the event is fulfilled (e.g., ['server 1', etc.]).
 
 If you'd prefer JSON messages, just add the *-f json* flag.
 
@@ -92,7 +93,8 @@ If you'd prefer JSON messages, just add the *-f json* flag.
 $ chute -f json -n 10 -t 100 mm1_function.py
 ```
 
-== More Complex Simulations ==
+More Complex Simulations
+------------------------
 
 A process is anything that is callable in Python. If we'd rather, we could use a Customer class instead of a function for our M/M/1 queue simulation. This would allow us to keep state and other information on our Customer instances.
 
@@ -142,7 +144,8 @@ Let's say I want two servers like above, then I want to release one of them and 
         yield chute.release
 ```
 
-== Happy Simulating ==
+Happy Simulating
+----------------
 
 Thanks for looking at chute. I hope you enjoy it. It'll be changing and improving a lot, so keep checking back.
 
