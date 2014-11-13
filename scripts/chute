@@ -1,54 +1,48 @@
 #!/usr/bin/env python
+'''
+Chute is a simple discrete event simulator for Python.
 
-from argparse import ArgumentParser
+Usage: chute [-h] -n NUM -t TIME [-f FMT] MODEL [MODEL ...]
+
+Options:
+  -h --help        show this help message and exit
+  -n --num NUM     number of simulations to run
+  -t --time TIME   simulation time to run each iteration for
+  -f --format FMT  csv (default) or json output format
+'''
 from chute import Simulator
+from docopt import docopt
 import os
 import sys
 
+
 if __name__ == '__main__':
-    # Set up command line     .
-    parser = ArgumentParser(description='Run the chute simulator.')
+    args = docopt(__doc__)
 
-    parser.add_argument(
-        'models', nargs='+', metavar='MODEL',
-        help='model file to incorporate in the simulation'
-    )
-    parser.add_argument(
-        '-n', '--num', dest='num', type=int, metavar='NUM', required=True,
-        help='number of simulations to run'
-    )
-    parser.add_argument(
-        '-t', '--time', dest='time', type=int, metavar='TIME', required=True,
-        help='clock time to run simulation for'
-    )
-    parser.add_argument(
-        '-f', '--format', dest='format', metavar='FMT',
-        help='csv (default) or json'
-    )
+    # Verify that our args are OK.
+    try:
+        args['--num'] = int(args['--num'])
+        assert args['--num'] > 0
+    except:
+        print 'num must be > 0'
+        sys.exit(1)
 
-    # Get and check command line args.
-    args = parser.parse_args()
-    if not args.models:
-        parser.error('model file required')
+    try:
+        args['--time'] = float(args['--time'])
+        assert args['--time'] > 0
+    except:
+        print 'time must be > 0'
+        sys.exit(1)
 
-    if args.num <= 0:
-        parser.error('num must be > 0')
+    if args['--format'] != 'json':
+        args['--format'] = 'csv'
 
-    if args.time <= 0:
-        parser.error('time must be > 0')
-
-    if args.format:
-        if args.format not in ('csv', 'json'):
-            parser.error('valid output formats are csv and json')
-    else:
-        args.format = 'csv'
-
-    for num in range(args.num):
-        # Load the model file.s This will register all our processes 
+    for num in range(args['--num']):
+        # Load the model file.s This will register all our processes
         # with chute. We reload the environment before each simulation.
-        for model in args.models:
+        for model in args['MODEL']:
             exec(os.linesep.join(open(model)))
-    
+
         # And run the simulator
-        s = Simulator(num=num, out=sys.stdout, fmt=args.format)
-        s.run(args.time)
+        s = Simulator(num=num, out=sys.stdout, fmt=args['--format'])
+        s.run(args['--time'])

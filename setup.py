@@ -2,12 +2,11 @@ from distutils.core import setup
 
 setup (
     name         = 'chute',
-    version      = '0.1',
+    version      = '0.2.dev',
     description  = 'A simple tool for Discrete Event Simulation in Python.',
     author       = "Ryan J. O'Neil",
     author_email = 'ryanjoneil@gmail.com',
-    url          = 'http://bitbucket.org/ryanjoneil/chute',
-    download_url = 'http://bitbucket.org/ryanjoneil/chute/downloads',
+    url          = 'https://github.com/ryanjoneil/chute',
 
     package_dir = {'': 'src'},
     packages    = ['chute'],
@@ -19,5 +18,7 @@ setup (
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Topic :: Scientific/Engineering :: Mathematics'
-    ]
+    ],
+
+    install_requires = ['docopt']
 )
