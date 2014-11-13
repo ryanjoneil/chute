@@ -44,12 +44,12 @@ def process(interarrival):
 class Simulator(object):
     MESSAGE_FIELDS = [
         'simulation',        # Simulation number.
-        'sent time',         # Time an event is sent to the simulator.
-        'start time',        # Time an event starts processing.
-        'stop time',         # Time that event stops processing..
-        'event type',        # Event type (create, request, etc.).
-        'process name',      # Process name (e.g. 'customer')
-        'process instance',  # Process instance number (e.g. 5)
+        'sent_time',         # Time an event is sent to the simulator.
+        'start_time',        # Time an event starts processing.
+        'stop_time',         # Time that event stops processing..
+        'event_type',        # Event type (create, request, etc.).
+        'process_name',      # Process name (e.g. 'customer')
+        'process_instance',  # Process instance number (e.g. 5)
         'assigned'           # Resources assigned after the event is fulfilled
                              # (e.g., ['server 1', etc.])
     ]
@@ -227,17 +227,17 @@ class Simulator(object):
                     if self.fmt == 'csv':
                         aout = ', '.join(str(x) for x in alist)
                     else:
-                        aout = list(map(str, alist))
+                        aout = [str(a) for a in alist]
 
                     # Generate a DES message.
                     message = {
                         'simulation':       self.num,
-                        'sent time':        event.sent_time,
-                        'start time':       event.start_time,
-                        'stop time':        event.stop_time,
-                        'event type':       event.event_type,
-                        'process name':     event.process_name,
-                        'process instance': event.process_instance,
+                        'sent_time':        event.sent_time,
+                        'start_time':       event.start_time,
+                        'stop_time':        event.stop_time,
+                        'event_type':       event.event_type,
+                        'process_name':     event.process_name,
+                        'process_instance': event.process_instance,
                         'assigned':         aout
                     }
 

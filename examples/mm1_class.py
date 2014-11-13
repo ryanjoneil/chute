@@ -1,5 +1,6 @@
 import chute
 
+
 @chute.process(chute.dist.exponential(.5))
 class Customer(object):
     def __call__(self):
