@@ -10,6 +10,7 @@ Options:
   -t --time TIME   simulation time to run each iteration for
   -f --format FMT  csv (default) or json output format
 '''
+from __future__ import print_function
 from chute import Simulator
 from docopt import docopt
 import os
@@ -24,14 +25,14 @@ if __name__ == '__main__':
         args['--num'] = int(args['--num'])
         assert args['--num'] > 0
     except:
-        print 'num must be > 0'
+        print('num must be > 0')
         sys.exit(1)
 
     try:
         args['--time'] = float(args['--time'])
         assert args['--time'] > 0
     except:
-        print 'time must be > 0'
+        print('time must be > 0')
         sys.exit(1)
 
     if args['--format'] != 'json':
