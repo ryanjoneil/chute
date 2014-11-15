@@ -10,13 +10,13 @@ Installation
 
 Installation is pretty simple, like most other Python tools. I'm assuming UNIX here, though on other platforms the commands are similar.
 
-```
+```bash
 $ easy_install chute
 ```
 
 If you want to install it into your system's Python directories, run this instead.
 
-```
+```bash
 $ sudo easy_install chute
 ```
 
@@ -25,7 +25,7 @@ Writing & Running Basic Simulations
 
 Simulations are intended to be as simple to create as possible. Type in the following and save it as *mm1_function.py*. This is one way an M/M/1 queue simulation might look.
 
-```#!python
+```python
 import chute
 
 @chute.process(chute.dist.exponential(.5))
@@ -39,7 +39,7 @@ Chute will create customer processes and put them into the simulation according 
 
 Let's run this simulation. Though you can do this directly in Python, it's simpler to use the *chute* command.
 
-```
+```bash
 $ chute -h
 usage: chute [-h] -n NUM -t TIME [-f FMT] MODEL [MODEL ...]
 
@@ -57,7 +57,7 @@ optional arguments:
 
 You can see here that chute requires a number of times to run the simulation, a stop time for each run, and at least one model file. Model files are just Python files like the one we created above. You an split your processes across as many files as you like. We'll run 10 iterations of our simulation, each for a time of 100.
 
-```
+```bash
 $ chute -n 10 -t 100 mm1_function.py | less
 ```
 
@@ -65,8 +65,8 @@ I'm piping this through *less* so it's easy to see the header. Chute runs our si
 
 Right now you should see something like this.
 
-```
-simulation,sent time,start time,stop time,event type,process name,process instance,assigned
+```bash
+simulation,sent_time,start_time,stop_time,event_type,process_name,process_instance,assigned
 0,0.04649989522533239,0.04649989522533239,0.04649989522533239,create,customer,0,
 0,0.04649989522533239,0.04649989522533239,0.04649989522533239,request,customer,0,server
 0,1.6557438414054708,1.6557438414054708,1.6557438414054708,create,customer,1,
@@ -79,15 +79,15 @@ etc.
 The default output is CSV format. The following fields are provided.
 
 * simulation: Simulation number.
-* sent time: Time an event is sent to the simulator.
-* start time: Time an event starts processing.
-* stop time: Time that event stops processing.
-* event type: Event type (create, request, etc.).
-* process name: Process name (e.g. 'customer').
-* process instance: Process instance number (e.g. 5).
+* sent_time: Time an event is sent to the simulator.
+* start_time: Time an event starts processing.
+* stop_time: Time that event stops processing.
+* event_type: Event type (create, request, etc.).
+* process_name: Process name (e.g. 'customer').
+* process_instance: Process instance number (e.g. 5).
 * assigned: Resources assigned after the event is fulfilled (e.g., ['server 1', etc.]).
 
-If you'd prefer JSON messages, just add the *-f json* flag.
+If you'd prefer JSON messages, just add the *-f json* flag. The messages will come out as one JSON dictionary per line.
 
 ```
 $ chute -f json -n 10 -t 100 mm1_function.py
