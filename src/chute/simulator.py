@@ -10,8 +10,6 @@ import sys
 PROCESSES = {}
 
 
-# TODO: This needs to use the decorator util library, but I can't remember
-#       exactly how that works without the documentation at hand...
 def process(interarrival):
     '''
     Registers a process with the simulator. A process can be anything that is

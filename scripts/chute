@@ -39,7 +39,7 @@ if __name__ == '__main__':
         args['--format'] = 'csv'
 
     for num in range(args['--num']):
-        # Load the model file.s This will register all our processes
+        # Load the model files. This will register all our processes
         # with chute. We reload the environment before each simulation.
         for model in args['MODEL']:
             exec(os.linesep.join(open(model)))
