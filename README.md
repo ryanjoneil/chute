@@ -41,6 +41,9 @@ Let's run this simulation. Though you can do this directly in Python, it's simpl
 
 ```bash
 $ chute -h
+```
+
+```
 usage: chute [-h] -n NUM -t TIME [-f FMT] MODEL [MODEL ...]
 
 Run the chute simulator.
