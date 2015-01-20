@@ -141,9 +141,9 @@ class Customer(object):
         yield chute.release
 ```
 
-In chute, a resource can be anything in Python. Here we're using strings because they are convenient. We could also use numbers or instances of classes. //Caveat: We're still working on getting the logic right for processes requesting other processes. For that, check back when chute 0.2 is released.//
+In chute, a resource can be anything in Python. Here we're using strings because they are convenient. We could also use numbers or instances of classes. _Caveat: We're still working on getting the logic right for processes requesting other processes. For that, check back when chute 0.2 is released._
 
-A resource can only be held by one process at a time. If I need my process to request multiple resources, I just add them to the *chute.request* line.
+A resource can only be held by one process at a time. If I need my process to request multiple resources, I just add them to the `chute.request` line.
 
 ```python
         yield chute.request, 'server 1', 'server 2'
@@ -155,9 +155,9 @@ Say I need two servers from a list of servers, but I don't care which ones I get
         yield chute.request, ['server 1', 'server 2', 'server 3'], ['server 1', 'server 2', 'server 3']
 ```
 
-Once every request I've made is fulfilled, my process can move on to the next line. *chute.hold* holds onto whatever resources are assigned to me. This is equivalent to being serviced by those resources.
+Once every request I've made is fulfilled, my process can move on to the next line. `chute.hold` holds onto whatever resources are assigned to me. This is equivalent to being serviced by those resources.
 
-Finally, the resources are released. Yielding *chute.release* without any arguments releases everything assigned to a process.
+Finally, the resources are released. Yielding `chute.release` without any arguments releases everything assigned to a process.
 
 ```python
         yield chute.release
