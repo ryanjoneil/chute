@@ -5,4 +5,3 @@ def customer():
     yield chute.request, 'server'
     yield chute.hold, chute.dist.exponential(.75)
     yield chute.release
-    

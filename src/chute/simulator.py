@@ -1,11 +1,11 @@
 from chute.event import Event
 from chute.event_gen import CreateEventGenerator
-from csv import DictWriter
+from chute.message import MessageHandler
 from functools import wraps
 import heapq
-import json
 import os
 import sys
+
 
 PROCESSES = {}
 
@@ -40,18 +40,6 @@ def process(interarrival):
 
 
 class Simulator(object):
-    MESSAGE_FIELDS = [
-        'simulation',        # Simulation number.
-        'sent_time',         # Time an event is sent to the simulator.
-        'start_time',        # Time an event starts processing.
-        'stop_time',         # Time that event stops processing..
-        'event_type',        # Event type (create, request, etc.).
-        'process_name',      # Process name (e.g. 'customer')
-        'process_instance',  # Process instance number (e.g. 5)
-        'assigned'           # Resources assigned after the event is fulfilled
-                             # (e.g., ['server 1', etc.])
-    ]
-
     def __init__(self, num=1, out=sys.stdout, fmt='csv'):
         '''
         Instantiates a simulator. Parameters:
@@ -61,16 +49,7 @@ class Simulator(object):
             - fmt (default='csv'): 'csv' or 'json'
         '''
         self.num = num
-        self.out = out
-        self.fmt = fmt
-
-        # TODO: Abstract the message handling component so we can allow
-        #       for any format. Provide a Message class and a message hook
-        #       so we can also measure things like queue length.
-        if fmt == 'csv':
-            self.writer = DictWriter(self.out, self.MESSAGE_FIELDS)
-            if self.num < 1:
-                self.writer.writeheader()
+        self.msg = MessageHandler(out, fmt, num < 1)
 
         self.clock = 0
         self.assigned = {}
@@ -219,16 +198,8 @@ class Simulator(object):
                     # Take this event off the queue.
                     event_gen.next
 
-                    # Format the assigned list for CSV. For other formats
-                    # just use the list of strings we have.
-                    alist = self.resources(event)
-                    if self.fmt == 'csv':
-                        aout = ', '.join(str(x) for x in alist)
-                    else:
-                        aout = [str(a) for a in alist]
-
                     # Generate a DES message.
-                    message = {
+                    self.msg.log({
                         'simulation':       self.num,
                         'sent_time':        event.sent_time,
                         'start_time':       event.start_time,
@@ -236,13 +207,8 @@ class Simulator(object):
                         'event_type':       event.event_type,
                         'process_name':     event.process_name,
                         'process_instance': event.process_instance,
-                        'assigned':         aout
-                    }
-
-                    if self.fmt == 'csv':
-                        self.writer.writerow(message)
-                    elif self.fmt == 'json':
-                        self.out.write(json.dumps(message) + os.linesep)
+                        'assigned':         self.resources(event)
+                    })
 
                     # If the generator is done, take it off our list.
                     if event_gen.done:
